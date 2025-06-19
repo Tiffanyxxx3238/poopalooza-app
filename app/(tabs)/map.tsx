@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions, Alert, Modal, TextInput, ScrollView, Image, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Dimensions, Alert, Modal, TextInput, ScrollView, Image, Share, KeyboardAvoidingView } from 'react-native';
 import Colors from '@/constants/colors';
 import { MapPin, Navigation, Compass, List, Heart, Camera, Calendar, Trophy, Route, MessageCircle, Star, Upload, Mic, MicOff, Share2, Eye, EyeOff, Filter, ChevronDown, ChevronUp } from 'lucide-react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
@@ -468,6 +468,116 @@ export default function MapScreen() {
         setCheckInRecords(parsedRecords);
         setVisitedBathroomIds(parsedRecords.map((r: CheckInRecord) => r.bathroom.id));
       }
+    else {//專為測試做的模擬資料
+      const now = Date.now();
+      const demoRecords: CheckInRecord[] = [
+        {
+          id: 'mock-1',
+          timestamp: now - 1000 * 60 * 60 * 2,
+          bathroom: mockBathrooms[0],
+          mood: '💩',
+          bristolType: 4,
+          note: '超順暢的早上',
+          quickTag: 'Cafe',
+          rating: 4,
+          image: null,
+          audioUri: null,
+          location: {
+            lat: mockBathrooms[0].latitude,
+            lng: mockBathrooms[0].longitude,
+            name: mockBathrooms[0].name,
+          },
+          isPrivate: false,
+          anonymous: false,
+          customMessage: '一天的開始就從咖啡館出發 ☕',
+        },
+        {
+          id: 'mock-2',
+          timestamp: now - 1000 * 60 * 60 * 5,
+          bathroom: mockBathrooms[1],
+          mood: '😅',
+          bristolType: 5,
+          note: '有點急的狀況',
+          quickTag: 'Mall',
+          rating: 3,
+          image: null,
+          audioUri: null,
+          location: {
+            lat: mockBathrooms[1].latitude,
+            lng: mockBathrooms[1].longitude,
+            name: mockBathrooms[1].name,
+          },
+          isPrivate: false,
+          anonymous: true,
+          customMessage: '緊急應變！',
+        },
+        {
+          id: 'mock-3',
+          timestamp: now - 1000 * 60 * 60 * 10,
+          bathroom: mockBathrooms[2],
+          mood: '🧻',
+          bristolType: 3,
+          note: '安靜舒適',
+          quickTag: 'Library',
+          rating: 5,
+          image: null,
+          audioUri: null,
+          location: {
+            lat: mockBathrooms[2].latitude,
+            lng: mockBathrooms[2].longitude,
+            name: mockBathrooms[2].name,
+          },
+          isPrivate: false,
+          anonymous: false,
+          customMessage: '最棒的圖書館如廁體驗 📚',
+        },
+        {
+          id: 'mock-4',
+          timestamp: now - 1000 * 60 * 60 * 24,
+          bathroom: internationalBathrooms[0],
+          mood: '🥵',
+          bristolType: 1,
+          note: '卡住很久...',
+          quickTag: 'Airport',
+          rating: 2,
+          image: null,
+          audioUri: null,
+          location: {
+            lat: internationalBathrooms[0].latitude,
+            lng: internationalBathrooms[0].longitude,
+            name: internationalBathrooms[0].name,
+          },
+          isPrivate: true,
+          anonymous: true,
+          customMessage: '旅行前的緊張反應 😖',
+        },
+        {
+          id: 'mock-5',
+          timestamp: now - 1000 * 60 * 60 * 48,
+          bathroom: internationalBathrooms[1],
+          mood: '🥲',
+          bristolType: 6,
+          note: '可能水土不服',
+          quickTag: 'Tourist',
+          rating: 3,
+          image: null,
+          audioUri: null,
+          location: {
+            lat: internationalBathrooms[1].latitude,
+            lng: internationalBathrooms[1].longitude,
+            name: internationalBathrooms[1].name,
+          },
+          isPrivate: false,
+          anonymous: false,
+          customMessage: '倫敦初體驗不是很順...🌧️',
+        }
+      ];
+
+      setCheckInRecords(demoRecords);
+      setVisitedBathroomIds(demoRecords.map(r => r.bathroom.id));
+      await localStorageUtil.setItem('checkInRecords', JSON.stringify(demoRecords));
+    }
+
     } catch (error) {
       console.error('載入打卡記錄失敗:', error);
     }
@@ -1049,17 +1159,17 @@ export default function MapScreen() {
   };
 
   // Handle tab press
-  const handleTabPress = (tab: string) => {
-    console.log(`🔄 切換到 ${tab} 標籤`);
-    setActiveTab(tab);
-    
-    if ((tab === 'map' || tab === 'visited') && location) {
-      console.log('🗺️ 切換到地圖頁面，準備移動到用戶位置');
-      setTimeout(() => {
-        centerMapOnUser();
-      }, 500);
-    }
-  };
+const handleTabPress = (tab: string) => {
+  console.log(`🔄 切換到 ${tab} 標籤`);
+  setActiveTab(tab);
+  
+  if ((tab === 'map' || tab === 'visited' || tab === 'journey' || tab === 'poopline') && location) {
+    console.log('🗺️ 切換到地圖頁面，準備移動到用戶位置');
+    setTimeout(() => {
+      centerMapOnUser();
+    }, 500);
+  }
+};
 
   // Check-in modal component
   const CheckInModal = () => (
@@ -1071,6 +1181,10 @@ export default function MapScreen() {
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
+          <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    style={{ flex: 1 }}
+  >
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.modalTitle}>
               Check in at {selectedBathroom?.name} 🚽
@@ -1264,6 +1378,7 @@ export default function MapScreen() {
               </TouchableOpacity>
             </View>
           </ScrollView>
+          </KeyboardAvoidingView>
         </View>
       </View>
     </Modal>
@@ -1733,35 +1848,36 @@ export default function MapScreen() {
     return (
       <View style={styles.visitedContainer}>
         {/* 地圖區域 */}
-        <View style={styles.visitedMapContainer}>
+        <View style={[
+          styles.visitedMapContainer,
+          { height: showRecords ? 300 : 500 } // 根據 showRecords 動態調整地圖高度
+        ]}>
           <MapComponent />
+          {location && (
+            <TouchableOpacity 
+              style={styles.quickCheckInButton}
+              onPress={() => {
+                const currentLocationBathroom: Bathroom = {
+                  id: 'current-location',
+                  name: 'Current Location',
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                  address: 'My Current Location',
+                  rating: 0,
+                  distance: 0,
+                  type: 'Free Check-in',
+                  source: 'commercial',
+                  reviews: [],
+                  funnyQuote: 'Leave your mark here!',
+                };
+                handleCheckIn(currentLocationBathroom);
+              }}
+            >
+              <MapPin size={20} color="#FFFFFF" />
+              <Text style={styles.quickCheckInText}>Check In Here 💩</Text>
+            </TouchableOpacity>
+          )}
         </View>
-
-        {/* Quick check-in button for current location */}
-        {location && (
-          <TouchableOpacity 
-            style={styles.quickCheckInButton}
-            onPress={() => {
-              const currentLocationBathroom: Bathroom = {
-                id: 'current-location',
-                name: 'Current Location',
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                address: 'My Current Location',
-                rating: 0,
-                distance: 0,
-                type: 'Free Check-in',
-                source: 'commercial',
-                reviews: [],
-                funnyQuote: 'Leave your mark here!',
-              };
-              handleCheckIn(currentLocationBathroom);
-            }}
-          >
-            <MapPin size={20} color="#FFFFFF" />
-            <Text style={styles.quickCheckInText}>Check In Here 💩</Text>
-          </TouchableOpacity>
-        )}
 
         {/* Toggle Show Records */}
         <TouchableOpacity 
@@ -1774,197 +1890,105 @@ export default function MapScreen() {
         </TouchableOpacity>
 
         {/* ScrollView - 紀錄區塊（可收合） */}
-        {showRecords && (
-          <ScrollView 
-            style={styles.recordsScrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Achievement section */}
-            <View style={styles.achievementsSection}>
-              <Text style={styles.sectionTitle}>🏆 Achievement System</Text>
-              <View style={styles.achievementsList}>
-                {achievements.map((achievement) => (
-                  <View key={achievement.id} style={[
-                    styles.achievementCard,
-                    achievement.unlocked && styles.unlockedAchievement
-                  ]}>
-                    <Text style={styles.achievementEmoji}>{achievement.emoji}</Text>
-                    <View style={styles.achievementInfo}>
-                      <Text style={styles.achievementTitle}>{achievement.title}</Text>
-                      <Text style={styles.achievementDescription}>{achievement.description}</Text>
-                      <View style={styles.achievementProgress}>
-                        <Text style={styles.progressText}>
-                          {achievement.progress}/{achievement.target}
-                        </Text>
-                        <View style={styles.progressBar}>
-                          <View style={[
-                            styles.progressFill,
-                            { width: `${Math.min(100, (achievement.progress / achievement.target) * 100)}%` }
-                          ]} />
+        {showRecords ? (
+          <View style={styles.recordsWrapper}>
+            <ScrollView
+              style={styles.recordsScrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {/* Achievement System */}
+              <View style={styles.achievementsSection}>
+                <Text style={styles.sectionTitle}>🏆 Achievement System</Text>
+                <View style={styles.achievementsList}>
+                  {achievements.map((achievement) => (
+                    <View key={achievement.id} style={[
+                      styles.achievementCard,
+                      achievement.unlocked && styles.unlockedAchievement
+                    ]}>
+                      <Text style={styles.achievementEmoji}>{achievement.emoji}</Text>
+                      <View style={styles.achievementInfo}>
+                        <Text style={styles.achievementTitle}>{achievement.title}</Text>
+                        <Text style={styles.achievementDescription}>{achievement.description}</Text>
+                        <View style={styles.achievementProgress}>
+                          <Text style={styles.progressText}>
+                            {achievement.progress}/{achievement.target}
+                          </Text>
+                          <View style={styles.progressBar}>
+                            <View style={[
+                              styles.progressFill,
+                              { width: `${Math.min(100, (achievement.progress / achievement.target) * 100)}%` }
+                            ]} />
+                          </View>
                         </View>
                       </View>
+                      {achievement.unlocked && (
+                        <Text style={styles.unlockedBadge}>✅</Text>
+                      )}
                     </View>
-                    {achievement.unlocked && (
-                      <Text style={styles.unlockedBadge}>✅</Text>
-                    )}
-                  </View>
-                ))}
+                  ))}
+                </View>
               </View>
-            </View>
-
-            {/* Today's records */}
-            <View style={styles.recordsSection}>
-              <TouchableOpacity 
-                style={styles.recordsHeader}
-                onPress={() => setShowTodayRecords(!showTodayRecords)}
-              >
-                <Text style={styles.sectionTitle}>📍 Today's Check-ins ({todayRecords.length})</Text>
-                {showTodayRecords ? (
-                  <ChevronUp size={24} color={Colors.primary.text} />
-                ) : (
-                  <ChevronDown size={24} color={Colors.primary.text} />
-                )}
-              </TouchableOpacity>
-              
-              {showTodayRecords && (
-                <View style={styles.recordsList}>
-                  {todayRecords.length === 0 ? (
-                    <Text style={styles.noRecordsText}>No check-in records today</Text>
+              {/* 打卡記錄內容 */}
+              <View style={styles.recordsSection}>
+                <TouchableOpacity
+                  style={styles.recordsHeader}
+                  onPress={() => setShowTodayRecords(!showTodayRecords)}
+                >
+                  <Text style={styles.sectionTitle}>📍 今日打卡紀錄 ({todayRecords.length})</Text>
+                  {showTodayRecords ? (
+                    <ChevronUp size={24} color={Colors.primary.text} />
                   ) : (
-                    todayRecords.sort((a, b) => b.timestamp - a.timestamp).map((record) => (
+                    <ChevronDown size={24} color={Colors.primary.text} />
+                  )}
+                </TouchableOpacity>
+                {showTodayRecords && (
+                  todayRecords.length === 0 ? (
+                    <Text style={styles.noRecordsText}>今天沒有打卡紀錄</Text>
+                  ) : (
+                    todayRecords.map(record => (
                       <View key={record.id} style={styles.recordCard}>
-                        <View style={styles.recordHeader}>
-                          <Text style={styles.recordMood}>{record.mood}</Text>
-                          <View style={styles.recordInfo}>
-                            <Text style={styles.recordName}>{record.bathroom.name}</Text>
-                            <Text style={styles.recordTime}>
-                              {new Date(record.timestamp).toLocaleTimeString('en-US', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </Text>
-                            {record.quickTag && (
-                              <Text style={styles.recordTag}>🏷️ {record.quickTag}</Text>
-                            )}
-                          </View>
-                        </View>
-                        
-                        {record.customMessage && (
-                          <View style={styles.recordDetail}>
-                            <Text style={styles.recordCustomMessage}>💬 {record.customMessage}</Text>
-                          </View>
-                        )}
-                        
-                        {record.bristolType && (
-                          <View style={styles.recordDetail}>
-                            <Text style={styles.recordDetailText}>
-                              Poop Type: {BRISTOL_EMOJIS[record.bristolType]} Type {record.bristolType}
-                            </Text>
-                          </View>
-                        )}
-                        
-                        <View style={styles.recordDetail}>
-                          <Text style={styles.recordDetailText}>
-                            Comfort: {renderStars(record.rating)}
-                          </Text>
-                        </View>
-                        
-                        {record.image && (
-                          <View style={styles.recordImageContainer}>
-                            <Image source={{ uri: record.image }} style={styles.recordImage} />
-                          </View>
-                        )}
-                        
-                        {record.audioUri && (
-                          <View style={styles.recordAudio}>
-                            <Text style={styles.recordAudioText}>🎵 Voice Note</Text>
-                          </View>
-                        )}
-                        
-                        {record.note && (
-                          <View style={styles.recordNote}>
-                            <Text style={styles.recordNoteText}>📝 {record.note}</Text>
-                          </View>
-                        )}
-
-                        <View style={styles.recordFooter}>
-                          <Text style={styles.recordPrivacy}>
-                            {record.isPrivate ? '🔒 Private' : '🌍 Public'} | 
-                            {record.anonymous ? ' Anonymous' : ' Named'}
-                          </Text>
-                        </View>
+                        <Text style={styles.recordMood}>{record.mood}</Text>
+                        <Text style={styles.recordName}>{record.bathroom.name}</Text>
+                        <Text style={styles.recordTime}>
+                          {new Date(record.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
                       </View>
                     ))
-                  )}
-                </View>
-              )}
-            </View>
-
-            {/* Previous records */}
-            {previousRecords.length > 0 && (
+                  )
+                )}
+              </View>
               <View style={styles.recordsSection}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.recordsHeader}
                   onPress={() => setShowPreviousRecords(!showPreviousRecords)}
                 >
-                  <Text style={styles.sectionTitle}>📅 Previous Records ({previousRecords.length})</Text>
+                  <Text style={styles.sectionTitle}>📅 過去打卡紀錄 ({previousRecords.length})</Text>
                   {showPreviousRecords ? (
                     <ChevronUp size={24} color={Colors.primary.text} />
                   ) : (
                     <ChevronDown size={24} color={Colors.primary.text} />
                   )}
                 </TouchableOpacity>
-                
                 {showPreviousRecords && (
-                  <View style={styles.recordsList}>
-                    {previousRecords.sort((a, b) => b.timestamp - a.timestamp).map((record) => (
+                  previousRecords.length === 0 ? (
+                    <Text style={styles.noRecordsText}>沒有過去打卡紀錄</Text>
+                  ) : (
+                    previousRecords.map(record => (
                       <View key={record.id} style={styles.recordCard}>
-                        <View style={styles.recordHeader}>
-                          <Text style={styles.recordMood}>{record.mood}</Text>
-                          <View style={styles.recordInfo}>
-                            <Text style={styles.recordName}>{record.bathroom.name}</Text>
-                            <Text style={styles.recordDate}>
-                              {new Date(record.timestamp).toLocaleDateString('en-US')} {' '}
-                              {new Date(record.timestamp).toLocaleTimeString('en-US', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </Text>
-                            {record.quickTag && (
-                              <Text style={styles.recordTag}>🏷️ {record.quickTag}</Text>
-                            )}
-                          </View>
-                        </View>
-                        
-                        {record.customMessage && (
-                          <View style={styles.recordDetail}>
-                            <Text style={styles.recordCustomMessage}>💬 {record.customMessage}</Text>
-                          </View>
-                        )}
-                        
-                        {record.note && (
-                          <View style={styles.recordNote}>
-                            <Text style={styles.recordNoteText}>📝 {record.note}</Text>
-                          </View>
-                        )}
+                        <Text style={styles.recordMood}>{record.mood}</Text>
+                        <Text style={styles.recordName}>{record.bathroom.name}</Text>
+                        <Text style={styles.recordTime}>
+                          {new Date(record.timestamp).toLocaleDateString('zh-TW')} {new Date(record.timestamp).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
                       </View>
-                    ))}
-                  </View>
+                    ))
+                  )
                 )}
               </View>
-            )}
-
-            {/* Share journey button */}
-            <TouchableOpacity 
-              style={styles.shareButton}
-              onPress={sharePooJourney}
-            >
-              <Share2 size={20} color="#FFFFFF" />
-              <Text style={styles.shareButtonText}>Share Today's Poop Line</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        )}
+            </ScrollView>
+          </View>
+        ) : null}
       </View>
     );
   };
@@ -2074,39 +2098,39 @@ export default function MapScreen() {
     );
   };
 
-  const renderContent = () => {
-    if (errorMsg) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{errorMsg}</Text>
-          <Text style={styles.errorSubtext}>
-            Please enable location services to find nearby bathrooms.
-          </Text>
-          <TouchableOpacity 
-            style={styles.retryButton} 
-            onPress={retryLocationRequest}
-          >
-            <Text style={styles.retryButtonText}>Retry Location</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+const renderContent = () => {
+  if (errorMsg) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{errorMsg}</Text>
+        <Text style={styles.errorSubtext}>
+          Please enable location services to find nearby bathrooms.
+        </Text>
+        <TouchableOpacity 
+          style={styles.retryButton} 
+          onPress={retryLocationRequest}
+        >
+          <Text style={styles.retryButtonText}>Retry Location</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-    switch (activeTab) {
-      case 'map':
-        return <MapComponent />;
-      case 'nearby':
-        return renderNearbyList();
-      case 'visited':
-        return renderVisitedContent();
-      case 'journey':
-        return renderJourneyContent();
-      case 'poopline': 
-        return renderJourneyContent(); // 修復：使用現有功能
-      default:
-        return renderNearbyList();
-    }
-  };
+  switch (activeTab) {
+    case 'map':
+      return <MapComponent />;
+    case 'nearby':
+      return renderNearbyList();
+    case 'visited':
+      return renderVisitedContent();
+    case 'journey':
+      return renderJourneyContent();
+    case 'poopline':
+      return renderJourneyContent();
+    default:
+      return renderNearbyList();
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -2148,12 +2172,12 @@ export default function MapScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'journey' && styles.activeTab]}
-            onPress={() => handleTabPress('journey')}
+            style={[styles.tab, activeTab === 'poopline' && styles.activeTab]}
+            onPress={() => handleTabPress('poopline')}
             activeOpacity={0.7}
           >
-            <Route size={16} color={activeTab === 'journey' ? '#FFFFFF' : Colors.primary.lightText} />
-            <Text style={[styles.tabText, activeTab === 'journey' && styles.activeTabText]}>Poop Line</Text>
+            <Route size={16} color={activeTab === 'poopline' ? '#FFFFFF' : Colors.primary.lightText} />
+            <Text style={[styles.tabText, activeTab === 'poopline' && styles.activeTabText]}>Poop Line</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -2455,7 +2479,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 80,
   },
   bathroomCard: {
     flexDirection: 'row',
@@ -2572,14 +2598,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
   },
   emptyTitle: {
-    fontSize: 20,
+    textAlign: 'center',
+    fontSize: 16,
     fontWeight: 'bold',
     color: Colors.primary.text,
     marginTop: 16,
-    marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
@@ -2864,7 +2889,8 @@ const styles = StyleSheet.create({
   
   // Visited content styles
   visitedContainer: {
-    flex: 1,
+    flex: 1, // 確保有這行
+    backgroundColor: Colors.primary.background, // 修正：使用正確的顏色
   },
   visitedMapContainer: {
     height: 300,
@@ -2894,7 +2920,7 @@ const styles = StyleSheet.create({
   },
   recordsScrollView: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   achievementsSection: {
     marginBottom: 24,
@@ -2979,6 +3005,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.card,
     borderRadius: 12,
     padding: 16,
+    marginBottom: 12, // 新增這一行
   },
   recordHeader: {
     flexDirection: 'row',
@@ -3251,5 +3278,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: '#aaa',
     borderWidth: 1,
+  },
+   emptyContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  minimizedRecordsBar: {
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#eee',
+    borderRadius: 8,
+    marginTop: 8,
+    marginHorizontal: 16,
+  },
+  minimizedText: {
+    fontSize: 12,
+    color: '#888',
+  },
+  recordsWrapper: {
+    flex: 1,
+    backgroundColor: '#F8E9D2',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: 8,
+    minHeight: 32,
+  },
+  recordsWrapperMinimized: {
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
 });
